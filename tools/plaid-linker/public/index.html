@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cashflow Plaid Linker</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+    <script type="module" src="/app.js"></script>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">Local setup utility</p>
+      <h1>Connect cashflow accounts</h1>
+      <p class="intro">
+        Link each institution once. Access tokens go directly from this local
+        service to AWS Secrets Manager and are never shown in the browser.
+      </p>
+
+      <section class="actions" aria-label="Institutions">
+        <button type="button" data-institution="wells-fargo">
+          Connect Wells Fargo
+        </button>
+        <button type="button" data-institution="amex">
+          Connect American Express
+        </button>
+      </section>
+
+      <section class="status" aria-live="polite">
+        <h2>Status</h2>
+        <p id="status">Ready.</p>
+        <ul id="accounts"></ul>
+      </section>
+
+      <p class="notice">
+        Confirm the expected masked account suffixes before closing this page.
+      </p>
+    </main>
+  </body>
+</html>
+

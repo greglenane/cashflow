@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+node_modules/
+*.duckdb
+*.duckdb.wal
+build/
+dist/
+reports/
+
+# Plaid's upstream sample is used only for local connectivity testing.
+/quickstart/
+
