@@ -1,10 +1,20 @@
 transaction_id,account_id,transaction_date,name,merchant_name,plaid_amount,personal_finance_category_primary,personal_finance_category_detailed,pending,source_file,imported_at
 txn_payroll,acct_wf_checking,2026-06-30,SYNTHETIC PAYROLL,,-2500.00,INCOME,INCOME_WAGES,false,fixture_batch_001,2026-07-01T05:00:00Z
 txn_grocery,acct_wf_checking,2026-07-01,SYNTHETIC MARKET,Synthetic Market,125.50,FOOD_AND_DRINK,FOOD_AND_DRINK_GROCERIES,false,fixture_batch_001,2026-07-01T05:00:00Z
-txn_wf_purchase,acct_wf_credit,2026-07-01,SYNTHETIC HARDWARE,Synthetic Hardware,80.00,GENERAL_MERCHANDISE,GENERAL_MERCHANDISE_OTHER_GENERAL_MERCHANDISE,false,fixture_batch_001,2026-07-01T05:00:00Z
+txn_wf_purchase,acct_wf_credit,2026-07-01,SYNTHETIC HARDWARE,Synthetic Hardware,80.00,HOME_IMPROVEMENT,HOME_IMPROVEMENT_HARDWARE,false,fixture_batch_001,2026-07-01T05:00:00Z
 txn_checking_payment,acct_wf_checking,2026-07-02,SYNTHETIC CARD PAYMENT,,500.00,TRANSFER_OUT,TRANSFER_OUT_CARD_PAYMENT,false,fixture_batch_001,2026-07-02T05:00:00Z
 txn_credit_payment,acct_wf_credit,2026-07-02,SYNTHETIC PAYMENT RECEIVED,,-500.00,TRANSFER_IN,TRANSFER_IN_CARD_PAYMENT,false,fixture_batch_001,2026-07-02T05:00:00Z
 txn_amex_meal,acct_amex_credit,2026-07-03,SYNTHETIC CAFE,Synthetic Cafe,65.00,FOOD_AND_DRINK,FOOD_AND_DRINK_RESTAURANT,false,fixture_batch_001,2026-07-03T05:00:00Z
 txn_refund,acct_amex_credit,2026-07-03,SYNTHETIC CAFE REFUND,Synthetic Cafe,-20.00,FOOD_AND_DRINK,FOOD_AND_DRINK_RESTAURANT,false,fixture_batch_001,2026-07-03T05:00:00Z
 txn_pending,acct_amex_credit,2026-07-04,SYNTHETIC PENDING,Synthetic Pending,15.00,GENERAL_MERCHANDISE,GENERAL_MERCHANDISE_OTHER_GENERAL_MERCHANDISE,true,fixture_batch_001,2026-07-04T05:00:00Z
 txn_grocery,acct_wf_checking,2026-07-01,SYNTHETIC MARKET,Synthetic Market,125.50,FOOD_AND_DRINK,FOOD_AND_DRINK_GROCERIES,false,fixture_batch_000,2026-07-01T04:00:00Z
+txn_prior_month,acct_wf_checking,2026-06-02,SYNTHETIC PRIOR MONTH,Synthetic Service,100.00,GENERAL_SERVICES,GENERAL_SERVICES_OTHER_GENERAL_SERVICES,false,fixture_batch_001,2026-06-03T05:00:00Z
+txn_prior_year,acct_wf_checking,2025-07-02,SYNTHETIC PRIOR YEAR,Synthetic Project,200.00,HOME_IMPROVEMENT,HOME_IMPROVEMENT_OTHER,false,fixture_batch_001,2025-07-03T05:00:00Z
+txn_stream_may,acct_amex_credit,2026-05-01,SYNTHETIC STREAM,Synthetic Stream,20.00,ENTERTAINMENT,ENTERTAINMENT_TV_AND_MOVIES,false,fixture_batch_001,2026-05-02T05:00:00Z
+txn_stream_jun,acct_amex_credit,2026-06-01,SYNTHETIC STREAM,Synthetic Stream,20.00,ENTERTAINMENT,ENTERTAINMENT_TV_AND_MOVIES,false,fixture_batch_001,2026-06-02T05:00:00Z
+txn_stream_jul,acct_amex_credit,2026-07-01,SYNTHETIC STREAM,Synthetic Stream,20.00,ENTERTAINMENT,ENTERTAINMENT_TV_AND_MOVIES,false,fixture_batch_001,2026-07-02T05:00:00Z
+txn_store_10,acct_wf_credit,2026-04-01,SYNTHETIC STORE,Synthetic Store,10.00,GENERAL_MERCHANDISE,GENERAL_MERCHANDISE_OTHER_GENERAL_MERCHANDISE,false,fixture_batch_001,2026-04-02T05:00:00Z
+txn_store_11,acct_wf_credit,2026-04-05,SYNTHETIC STORE,Synthetic Store,11.00,GENERAL_MERCHANDISE,GENERAL_MERCHANDISE_OTHER_GENERAL_MERCHANDISE,false,fixture_batch_001,2026-04-06T05:00:00Z
+txn_store_12,acct_wf_credit,2026-04-10,SYNTHETIC STORE,Synthetic Store,12.00,GENERAL_MERCHANDISE,GENERAL_MERCHANDISE_OTHER_GENERAL_MERCHANDISE,false,fixture_batch_001,2026-04-11T05:00:00Z
+txn_store_13,acct_wf_credit,2026-04-15,SYNTHETIC STORE,Synthetic Store,13.00,GENERAL_MERCHANDISE,GENERAL_MERCHANDISE_OTHER_GENERAL_MERCHANDISE,false,fixture_batch_001,2026-04-16T05:00:00Z
+txn_store_outlier,acct_wf_credit,2026-04-20,SYNTHETIC STORE,Synthetic Store,500.00,GENERAL_MERCHANDISE,GENERAL_MERCHANDISE_OTHER_GENERAL_MERCHANDISE,false,fixture_batch_001,2026-04-21T05:00:00Z

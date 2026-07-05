@@ -169,6 +169,26 @@ def export_curated(
                 "analytics.fct_monthly_spending_by_category",
                 "month_start, category",
             ),
+            (
+                "metrics/cashflow_periods.parquet",
+                "analytics.fct_cashflow_periods",
+                "period_name",
+            ),
+            (
+                "metrics/mtd_comparison.parquet",
+                "analytics.fct_mtd_comparison",
+                "data_cutoff_date",
+            ),
+            (
+                "analytics/recurring_purchases.parquet",
+                "analytics.fct_recurring_purchases",
+                "merchant_normalized, category",
+            ),
+            (
+                "analytics/outlier_purchases.parquet",
+                "analytics.fct_outlier_purchases",
+                "transaction_date, transaction_id",
+            ),
         ]
         for relative_key, relation, ordering in metric_exports:
             destination = output_directory / Path(relative_key)

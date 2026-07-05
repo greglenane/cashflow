@@ -2,4 +2,4 @@
 
 select count(*) as actual_rows
 from {{ ref('fct_transactions') }}
-having count(*) != 7
+having count(*) != 17

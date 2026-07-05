@@ -127,6 +127,47 @@ class ExportCuratedTest(unittest.TestCase):
                 0::bigint as refund_count
             """
         )
+        connection.execute(
+            """
+            create table analytics.fct_cashflow_periods as
+            select
+                'current_mtd'::varchar as period_name,
+                date '2026-01-02' as data_cutoff_date,
+                date '2026-01-01' as period_start,
+                date '2026-01-02' as period_end,
+                2::bigint as comparable_day_count,
+                100::decimal(18, 2) as income,
+                0::decimal(18, 2) as spending,
+                100::decimal(18, 2) as net_cashflow,
+                1::decimal(18, 4) as savings_rate
+            """
+        )
+        connection.execute(
+            """
+            create table analytics.fct_mtd_comparison as
+            select
+                date '2026-01-02' as data_cutoff_date,
+                2::bigint as comparable_day_count,
+                0::decimal(18, 2) as current_spending
+            """
+        )
+        connection.execute(
+            """
+            create table analytics.fct_recurring_purchases as
+            select
+                'recurring'::varchar as recurring_id,
+                'Synthetic'::varchar as merchant_normalized,
+                'Test'::varchar as category
+            """
+        )
+        connection.execute(
+            """
+            create table analytics.fct_outlier_purchases as
+            select
+                'outlier'::varchar as transaction_id,
+                date '2026-01-01' as transaction_date
+            """
+        )
         connection.close()
 
         first = export_curated(database, output)
@@ -134,7 +175,7 @@ class ExportCuratedTest(unittest.TestCase):
 
         self.assertEqual(first["run_id"], second["run_id"])
         self.assertEqual(first["total_transactions"], 2)
-        self.assertEqual(len(first["files"]), 5)
+        self.assertEqual(len(first["files"]), 9)
         self.assertTrue(
             (
                 output
@@ -156,6 +197,18 @@ class ExportCuratedTest(unittest.TestCase):
                 output
                 / "metrics/monthly_spending_by_category.parquet"
             ).is_file()
+        )
+        self.assertTrue(
+            (output / "metrics/cashflow_periods.parquet").is_file()
+        )
+        self.assertTrue(
+            (output / "metrics/mtd_comparison.parquet").is_file()
+        )
+        self.assertTrue(
+            (output / "analytics/recurring_purchases.parquet").is_file()
+        )
+        self.assertTrue(
+            (output / "analytics/outlier_purchases.parquet").is_file()
         )
 
 

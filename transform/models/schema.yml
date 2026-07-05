@@ -163,3 +163,81 @@ models:
       - name: spending
         data_tests:
           - not_null
+
+  - name: fct_cashflow_periods
+    description: Current MTD and matched-day prior-month and prior-year cashflow periods.
+    columns:
+      - name: period_name
+        data_tests:
+          - unique
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [current_mtd, prior_month_comparable, prior_year_comparable]
+      - name: data_cutoff_date
+        data_tests:
+          - not_null
+      - name: period_start
+        data_tests:
+          - not_null
+      - name: period_end
+        data_tests:
+          - not_null
+
+  - name: fct_mtd_comparison
+    description: One-row matched-day MTD spending and income comparison for headline metrics.
+    columns:
+      - name: data_cutoff_date
+        data_tests:
+          - unique
+          - not_null
+      - name: current_spending
+        data_tests:
+          - not_null
+      - name: prior_month_spending
+        data_tests:
+          - not_null
+      - name: prior_year_spending
+        data_tests:
+          - not_null
+
+  - name: fct_recurring_purchases
+    description: Explainable recurring expenses with cadence, confidence, and predicted next charge.
+    columns:
+      - name: recurring_id
+        data_tests:
+          - unique
+          - not_null
+      - name: merchant_normalized
+        data_tests:
+          - not_null
+      - name: cadence
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [weekly, monthly, quarterly, annual]
+      - name: confidence
+        data_tests:
+          - not_null
+      - name: detection_reason
+        data_tests:
+          - not_null
+
+  - name: fct_outlier_purchases
+    description: Expense outliers with robust category baselines and explicit flag reasons.
+    columns:
+      - name: transaction_id
+        data_tests:
+          - unique
+          - not_null
+      - name: amount_absolute
+        data_tests:
+          - not_null
+      - name: flag_method
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [category_mad, zero_mad_fallback, limited_history_threshold]
+      - name: detection_reason
+        data_tests:
+          - not_null

@@ -2,20 +2,44 @@
 
 with expected as (
     select
-        date '2026-06-01' as month_start,
-        2500.00::decimal(18, 2) as income,
-        0.00::decimal(18, 2) as spending,
-        2500.00::decimal(18, 2) as net_cashflow,
-        1.00::decimal(18, 4) as savings_rate,
+        date '2025-07-01' as month_start,
+        0.00::decimal(18, 2) as income,
+        200.00::decimal(18, 2) as spending,
+        -200.00::decimal(18, 2) as net_cashflow,
+        null::decimal(18, 4) as savings_rate,
         1::bigint as included_transaction_count
+    union all
+    select
+        date '2026-04-01',
+        0.00::decimal(18, 2),
+        546.00::decimal(18, 2),
+        -546.00::decimal(18, 2),
+        null::decimal(18, 4),
+        5::bigint
+    union all
+    select
+        date '2026-05-01',
+        0.00::decimal(18, 2),
+        20.00::decimal(18, 2),
+        -20.00::decimal(18, 2),
+        null::decimal(18, 4),
+        1::bigint
+    union all
+    select
+        date '2026-06-01',
+        2500.00::decimal(18, 2) as income,
+        120.00::decimal(18, 2) as spending,
+        2380.00::decimal(18, 2) as net_cashflow,
+        0.952::decimal(18, 4) as savings_rate,
+        3::bigint as included_transaction_count
     union all
     select
         date '2026-07-01',
         0.00::decimal(18, 2),
-        250.50::decimal(18, 2),
-        -250.50::decimal(18, 2),
+        270.50::decimal(18, 2),
+        -270.50::decimal(18, 2),
         null::decimal(18, 4),
-        4::bigint
+        5::bigint
 ),
 
 actual as (

@@ -7,9 +7,10 @@ Publication order:
 
 1. One Zstandard-compressed transaction file per calendar year
 2. One masked account metadata file
-3. Shared monthly cashflow and category metric files
-4. An immutable run manifest
-5. `curated/manifests/latest.json`
+3. Shared monthly and matched-period cashflow metric files
+4. Explainable recurring-purchase and outlier files
+5. An immutable run manifest
+6. `curated/manifests/latest.json`
 
 All uploads request SSE-S3 (`AES256`). Object keys and the run ID are
 deterministic, so rerunning unchanged data overwrites the same versioned keys.
