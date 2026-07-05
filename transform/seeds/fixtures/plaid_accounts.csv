@@ -1,0 +1,4 @@
+account_id,account_name,account_type,institution
+acct_wf_checking,WF Checking ••1111,checking,wells-fargo
+acct_wf_credit,WF Credit ••2222,credit,wells-fargo
+acct_amex_credit,Amex Credit ••3333,credit,amex

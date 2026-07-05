@@ -1,0 +1,99 @@
+version: 2
+
+models:
+  - name: int_plaid_raw_batches
+    description: Private Plaid raw batches read directly from the approved S3 prefix.
+    columns:
+      - name: source_file
+        data_tests:
+          - unique
+          - not_null
+      - name: batch
+        data_tests:
+          - not_null
+
+  - name: int_plaid_current_accounts
+    description: Latest sanitized account metadata from schema-version-2 raw batches.
+    columns:
+      - name: account_id
+        data_tests:
+          - unique
+          - not_null
+      - name: account_type
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [checking, credit]
+
+  - name: int_plaid_current_transactions
+    description: Current posted and pending Plaid records after replaying add, modify, and remove events.
+    columns:
+      - name: transaction_id
+        data_tests:
+          - unique
+          - not_null
+      - name: account_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('int_plaid_current_accounts')
+                field: account_id
+
+  - name: stg_plaid_accounts
+    description: Synthetic Plaid account metadata normalized to non-sensitive internal identifiers.
+    columns:
+      - name: account_id
+        data_tests:
+          - unique
+          - not_null
+      - name: account_type
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [checking, credit]
+
+  - name: stg_plaid_transactions
+    description: Posted Plaid transactions with canonical signs and deterministic deduplication.
+    columns:
+      - name: transaction_id
+        data_tests:
+          - unique
+          - not_null
+      - name: account_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_plaid_accounts')
+                field: account_id
+      - name: amount
+        data_tests:
+          - not_null
+
+  - name: fct_transactions
+    description: Canonical transaction fact table used by all cashflow metrics.
+    columns:
+      - name: transaction_id
+        data_tests:
+          - unique
+          - not_null
+      - name: account_id
+        data_tests:
+          - not_null
+      - name: transaction_date
+        data_tests:
+          - not_null
+      - name: amount
+        data_tests:
+          - not_null
+      - name: flow_type
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [income, expense, transfer, card_payment, refund, excluded]
+      - name: source
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [plaid]

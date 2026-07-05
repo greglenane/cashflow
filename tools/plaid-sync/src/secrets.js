@@ -29,7 +29,8 @@ export function createSecretsReader({
         if (
           value.institution !== item.institution ||
           !value.access_token ||
-          !value.item_id
+          !value.item_id ||
+          !Array.isArray(value.accounts)
         ) {
           throw new SyncError("PLAID_ITEM_SECRET_INCOMPLETE", {
             institution: item.institution,
@@ -39,6 +40,7 @@ export function createSecretsReader({
         return {
           institution: item.institution,
           accessToken: value.access_token,
+          accounts: sanitizeAccounts(value.accounts, item.institution),
         };
       });
 
@@ -51,6 +53,22 @@ export function createSecretsReader({
       };
     },
   };
+}
+
+function sanitizeAccounts(accounts, institution) {
+  return accounts.map((account) => {
+    if (!account.account_id || !account.type) {
+      throw new SyncError("PLAID_ITEM_ACCOUNT_INCOMPLETE", { institution });
+    }
+
+    return {
+      account_id: account.account_id,
+      type: account.type,
+      subtype: account.subtype ?? null,
+      mask: account.mask ?? null,
+      name: account.name ?? null,
+    };
+  });
 }
 
 async function getJsonSecret(client, secretId) {
@@ -67,4 +85,3 @@ async function getJsonSecret(client, secretId) {
     throw new SyncError("SECRET_VALUE_INVALID", { secretId });
   }
 }
-

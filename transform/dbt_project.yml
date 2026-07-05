@@ -1,0 +1,28 @@
+name: cashflow
+version: 1.0.0
+config-version: 2
+
+profile: cashflow
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  cashflow:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table
+
+seeds:
+  cashflow:
+    fixtures:
+      +schema: fixture
+      +quote_columns: false
+      +enabled: "{{ target.name == 'dev' }}"

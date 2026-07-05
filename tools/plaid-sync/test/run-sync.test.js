@@ -16,6 +16,15 @@ test("writes raw data before advancing cursor state", async () => {
         {
           institution: "amex",
           accessToken: "access-token",
+          accounts: [
+            {
+              account_id: "synthetic-account",
+              type: "credit",
+              subtype: "credit card",
+              mask: "3333",
+              name: "Synthetic Card",
+            },
+          ],
         },
       ],
     },
@@ -25,7 +34,14 @@ test("writes raw data before advancing cursor state", async () => {
         etag: '"etag-old"',
       }),
       writeRawBatch: async (key, batch) => {
-        operations.push(["raw", key, batch.counts]);
+        operations.push([
+          "raw",
+          key,
+          batch.schema_version,
+          batch.counts,
+          batch.accounts,
+          JSON.stringify(batch).includes("access-token"),
+        ]);
       },
       writeState: async (institution, state, etag) => {
         operations.push(["state", institution, state.cursor, etag]);
@@ -51,11 +67,25 @@ test("writes raw data before advancing cursor state", async () => {
   const expectedKey = rawBatchKey("amex", fetchedAt, "batch-test");
   assert.equal(stateKey("amex"), "state/plaid/amex.json");
   assert.deepEqual(operations, [
-    ["raw", expectedKey, { added: 1, modified: 0, removed: 0 }],
+    [
+      "raw",
+      expectedKey,
+      2,
+      { added: 1, modified: 0, removed: 0 },
+      [
+        {
+          account_id: "synthetic-account",
+          type: "credit",
+          subtype: "credit card",
+          mask: "3333",
+          name: "Synthetic Card",
+        },
+      ],
+      false,
+    ],
     ["state", "amex", "cursor-new", '"etag-old"'],
   ]);
   assert.equal(result[0].key, expectedKey);
   assert.equal(logs.length, 1);
   assert.equal(logs[0].includes("access-token"), false);
 });
-

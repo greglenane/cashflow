@@ -1,0 +1,44 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ReadBucketLocation",
+      "Effect": "Allow",
+      "Action": "s3:GetBucketLocation",
+      "Resource": "arn:aws:s3:::cashflow-dashboard"
+    },
+    {
+      "Sid": "ListTransformPrefixes",
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::cashflow-dashboard",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": [
+            "raw/plaid",
+            "raw/plaid/*",
+            "curated",
+            "curated/*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "ReadPlaidRawBatches",
+      "Effect": "Allow",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::cashflow-dashboard/raw/plaid/*"
+    },
+    {
+      "Sid": "WriteCuratedDatasets",
+      "Effect": "Allow",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::cashflow-dashboard/curated/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-server-side-encryption": "AES256"
+        }
+      }
+    }
+  ]
+}

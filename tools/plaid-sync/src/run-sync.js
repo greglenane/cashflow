@@ -33,13 +33,14 @@ export async function runSync({
     };
 
     const batch = {
-      schema_version: 1,
+      schema_version: 2,
       batch_id: id,
       institution: item.institution,
       fetched_at: fetchedAt,
       transactions_update_status: updates.updateStatus,
       page_count: updates.pageCount,
       counts,
+      accounts: item.accounts,
       added: updates.added,
       modified: updates.modified,
       removed: updates.removed,
@@ -68,4 +69,3 @@ export async function runSync({
 
   return results;
 }
-

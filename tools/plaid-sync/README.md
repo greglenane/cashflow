@@ -19,6 +19,10 @@ It writes:
 The raw batch is written before cursor state advances. S3 conditional writes
 protect the cursor from overlapping runs.
 
+Schema version 2 raw batches also contain sanitized account metadata:
+`account_id`, type, subtype, mask, and name. Access tokens, item IDs, and Plaid
+API credentials are never written to raw batches or logs.
+
 ## Install
 
 From the repository root in Git Bash:
@@ -65,4 +69,3 @@ Tests are synthetic and make no Plaid or AWS calls:
 ```bash
 npm test
 ```
-

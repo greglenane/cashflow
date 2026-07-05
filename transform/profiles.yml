@@ -1,0 +1,24 @@
+cashflow:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('CASHFLOW_DUCKDB_PATH', '../.local/cashflow.duckdb') }}"
+      schema: analytics
+      threads: 4
+    prod:
+      type: duckdb
+      path: "{{ env_var('CASHFLOW_PROD_DUCKDB_PATH', '../.local/cashflow-prod.duckdb') }}"
+      schema: analytics
+      threads: 2
+      extensions:
+        - httpfs
+      settings:
+        preserve_insertion_order: false
+        memory_limit: 4GB
+      secrets:
+        - type: s3
+          provider: credential_chain
+          chain: env
+          region: us-east-1
+          scope: s3://cashflow-dashboard

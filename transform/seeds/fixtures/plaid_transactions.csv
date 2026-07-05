@@ -1,0 +1,10 @@
+transaction_id,account_id,transaction_date,name,merchant_name,plaid_amount,personal_finance_category_primary,personal_finance_category_detailed,pending,source_file,imported_at
+txn_payroll,acct_wf_checking,2026-06-30,SYNTHETIC PAYROLL,,-2500.00,INCOME,INCOME_WAGES,false,fixture_batch_001,2026-07-01T05:00:00Z
+txn_grocery,acct_wf_checking,2026-07-01,SYNTHETIC MARKET,Synthetic Market,125.50,FOOD_AND_DRINK,FOOD_AND_DRINK_GROCERIES,false,fixture_batch_001,2026-07-01T05:00:00Z
+txn_wf_purchase,acct_wf_credit,2026-07-01,SYNTHETIC HARDWARE,Synthetic Hardware,80.00,GENERAL_MERCHANDISE,GENERAL_MERCHANDISE_OTHER_GENERAL_MERCHANDISE,false,fixture_batch_001,2026-07-01T05:00:00Z
+txn_checking_payment,acct_wf_checking,2026-07-02,SYNTHETIC CARD PAYMENT,,500.00,TRANSFER_OUT,TRANSFER_OUT_CARD_PAYMENT,false,fixture_batch_001,2026-07-02T05:00:00Z
+txn_credit_payment,acct_wf_credit,2026-07-02,SYNTHETIC PAYMENT RECEIVED,,-500.00,TRANSFER_IN,TRANSFER_IN_CARD_PAYMENT,false,fixture_batch_001,2026-07-02T05:00:00Z
+txn_amex_meal,acct_amex_credit,2026-07-03,SYNTHETIC CAFE,Synthetic Cafe,65.00,FOOD_AND_DRINK,FOOD_AND_DRINK_RESTAURANT,false,fixture_batch_001,2026-07-03T05:00:00Z
+txn_refund,acct_amex_credit,2026-07-03,SYNTHETIC CAFE REFUND,Synthetic Cafe,-20.00,FOOD_AND_DRINK,FOOD_AND_DRINK_RESTAURANT,false,fixture_batch_001,2026-07-03T05:00:00Z
+txn_pending,acct_amex_credit,2026-07-04,SYNTHETIC PENDING,Synthetic Pending,15.00,GENERAL_MERCHANDISE,GENERAL_MERCHANDISE_OTHER_GENERAL_MERCHANDISE,true,fixture_batch_001,2026-07-04T05:00:00Z
+txn_grocery,acct_wf_checking,2026-07-01,SYNTHETIC MARKET,Synthetic Market,125.50,FOOD_AND_DRINK,FOOD_AND_DRINK_GROCERIES,false,fixture_batch_000,2026-07-01T04:00:00Z

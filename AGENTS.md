@@ -72,6 +72,9 @@ Confirmed AWS resources:
 - Local/MCP AWS profile: `cashflow-mcp` with non-root, metadata-only access
 - Local Plaid linker profile: `cashflow-linker`, which assumes `CashflowPlaidLinker` and must never be exposed to MCP
 - Local Plaid sync profile: `cashflow-sync`, which assumes `CashflowPlaidSync` and must never be exposed to MCP
+- Local transform profile: `cashflow-transform`, which assumes
+  `CashflowTransform`, can read `raw/plaid/*` and write encrypted
+  `curated/*`, and must never be exposed to MCP
 
 Target data flow:
 
@@ -254,10 +257,20 @@ Report requirements:
 - Prefer Git Bash syntax for terminal instructions and local commands. Use PowerShell only for Windows-specific operations that do not have a reliable Git Bash equivalent.
 - Use AWS CLI v2 with named profiles and temporary credentials; do not create long-lived IAM access keys for this project.
 - Use the installed `aws-core` plugin for AWS guidance.
-- For every AWS operation, explicitly use the `cashflow-mcp` profile and `us-east-1` Region. Do not rely on an inherited or default AWS identity.
+- For AWS metadata and infrastructure operations, explicitly use the
+  `cashflow-mcp` profile and `us-east-1` Region. Use only the named
+  task-specific role profile documented for data-bearing linker, sync, or
+  transform operations. Do not rely on an inherited or default AWS identity.
 - Never retrieve Plaid secret values through MCP.
 - Use `tools/plaid-linker` locally to create or repair Plaid Items. Export temporary `cashflow-linker` credentials only into the terminal running that utility, and never log or return Plaid access tokens.
 - Use `tools/plaid-sync` for incremental Plaid ingestion. Export temporary `cashflow-sync` credentials only into the terminal running that utility. Write immutable raw batches before advancing S3 cursor state, and never log transactions, access tokens, or cursors.
+- Use the `cashflow-transform` profile only for private raw-to-curated
+  transformations. Export its temporary credentials only for the dbt process,
+  remove them afterward, and never expose the profile to MCP.
+- Use `tools/curated-publish` only after a successful production dbt build.
+  Export deterministic year-partitioned Parquet locally, verify file hashes,
+  upload data files with SSE-S3, and publish the immutable and `latest`
+  manifests last.
 - Keep source-specific transformations isolated from shared analytics models.
 - Keep orchestration logic thin; business logic belongs in tested dbt models.
 - Do not persist credentials in DuckDB files, dbt profiles, Evidence source configuration, logs, or generated artifacts.
@@ -267,3 +280,7 @@ Report requirements:
 - Do not connect to a live financial account, add a paid provider, configure an email recipient, or upload private data without explicit user approval.
 - Do not enable GitHub Pages with real financial data until its access-control and redaction strategy has been explicitly confirmed.
 - Before handing off a change, run the relevant formatting, validation, tests, and Evidence build; report any command that could not be run.
+- Suggest a Git commit when a coherent milestone is complete and its relevant
+  tests pass, before beginning the next architectural layer or risky change.
+  Provide a concise proposed commit message, but do not commit unless the user
+  asks.

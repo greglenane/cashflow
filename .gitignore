@@ -2,12 +2,17 @@
 .env.*
 !.env.example
 node_modules/
+.venv/
+.local/
+.python-version
 *.duckdb
 *.duckdb.wal
 build/
 dist/
 reports/
+target/
+logs/
+dbt_packages/
 
 # Plaid's upstream sample is used only for local connectivity testing.
 /quickstart/
-

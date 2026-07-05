@@ -1,0 +1,13 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowLocalTransformRoleAssumption",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::377045608575:user/cashflow-mcp"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
