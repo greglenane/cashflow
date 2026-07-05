@@ -17,6 +17,8 @@ models:
   cashflow:
     staging:
       +materialized: view
+    intermediate:
+      +materialized: view
     marts:
       +materialized: table
 
@@ -26,3 +28,6 @@ seeds:
       +schema: fixture
       +quote_columns: false
       +enabled: "{{ target.name == 'dev' }}"
+    reference:
+      +schema: reference
+      +quote_columns: false

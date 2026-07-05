@@ -36,6 +36,10 @@ class ExportCuratedTest(unittest.TestCase):
                 amount decimal(18, 2),
                 flow_type varchar,
                 category varchar,
+                category_rule_id varchar,
+                transfer_match_id varchar,
+                matched_transaction_id varchar,
+                match_date_distance_days bigint,
                 source varchar,
                 source_file varchar,
                 imported_at timestamptz
@@ -45,7 +49,7 @@ class ExportCuratedTest(unittest.TestCase):
         connection.executemany(
             """
             insert into analytics.fct_transactions
-            values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             [
                 (
@@ -59,6 +63,10 @@ class ExportCuratedTest(unittest.TestCase):
                     -10,
                     "expense",
                     "test",
+                    None,
+                    None,
+                    None,
+                    None,
                     "plaid",
                     "fixture",
                     datetime(2026, 1, 1, tzinfo=timezone.utc),
@@ -74,6 +82,10 @@ class ExportCuratedTest(unittest.TestCase):
                     100,
                     "income",
                     "income",
+                    None,
+                    None,
+                    None,
+                    None,
                     "plaid",
                     "fixture",
                     datetime(2026, 1, 2, tzinfo=timezone.utc),
@@ -90,6 +102,31 @@ class ExportCuratedTest(unittest.TestCase):
                 'synthetic'::varchar as institution
             """
         )
+        connection.execute(
+            """
+            create table analytics.fct_monthly_cashflow as
+            select
+                date '2026-01-01' as month_start,
+                100::decimal(18, 2) as income,
+                0::decimal(18, 2) as gross_spending,
+                0::decimal(18, 2) as refunds,
+                0::decimal(18, 2) as spending,
+                100::decimal(18, 2) as net_cashflow,
+                1::bigint as included_transaction_count,
+                1::decimal(18, 4) as savings_rate
+            """
+        )
+        connection.execute(
+            """
+            create table analytics.fct_monthly_spending_by_category as
+            select
+                date '2025-12-01' as month_start,
+                'test'::varchar as category,
+                10::decimal(18, 2) as spending,
+                1::bigint as purchase_count,
+                0::bigint as refund_count
+            """
+        )
         connection.close()
 
         first = export_curated(database, output)
@@ -97,7 +134,7 @@ class ExportCuratedTest(unittest.TestCase):
 
         self.assertEqual(first["run_id"], second["run_id"])
         self.assertEqual(first["total_transactions"], 2)
-        self.assertEqual(len(first["files"]), 3)
+        self.assertEqual(len(first["files"]), 5)
         self.assertTrue(
             (
                 output
@@ -111,6 +148,15 @@ class ExportCuratedTest(unittest.TestCase):
             ).is_file()
         )
         self.assertTrue((output / "accounts/accounts.parquet").is_file())
+        self.assertTrue(
+            (output / "metrics/monthly_cashflow.parquet").is_file()
+        )
+        self.assertTrue(
+            (
+                output
+                / "metrics/monthly_spending_by_category.parquet"
+            ).is_file()
+        )
 
 
 if __name__ == "__main__":

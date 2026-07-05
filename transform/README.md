@@ -60,6 +60,20 @@ transaction rows into issues, logs, documentation, or chat.
 - Production-only intermediate models replay immutable Plaid add, modify, and
   remove events and derive masked account labels from sanitized raw metadata.
 
+## Classification and monthly metrics
+
+- `int_transactions_classified` applies Plaid flow categories and ordered
+  merchant overrides from `seeds/reference/category_rules.csv`.
+- Category rules use lowercase regular expressions. Lower priority numbers win
+  when multiple enabled rules match.
+- `int_transfer_matches` pairs equal-and-opposite transactions across different
+  accounts using mutual-best matching within three calendar days. Checking
+  outflows paired with credit inflows are treated as card payments.
+- `fct_monthly_cashflow` excludes transfers and card payments, nets refunds
+  against spending, and calculates savings rate only when income is nonzero.
+- `fct_monthly_spending_by_category` uses the same canonical transaction model,
+  so dashboard totals and category drill-downs reconcile.
+
 The classification rules are intentionally minimal. Transfer pairing,
 user-overridable categorization, and production S3 ingestion belong in later
 models with dedicated tests.

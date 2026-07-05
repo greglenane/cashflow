@@ -20,6 +20,10 @@ TRANSACTION_COLUMNS = """
     amount,
     flow_type,
     category,
+    category_rule_id,
+    transfer_match_id,
+    matched_transaction_id,
+    match_date_distance_days,
     source,
     source_file,
     imported_at
@@ -153,6 +157,41 @@ def export_curated(
         files.append(
             file_entry(output_directory, accounts_key, account_count)
         )
+
+        metric_exports = [
+            (
+                "metrics/monthly_cashflow.parquet",
+                "analytics.fct_monthly_cashflow",
+                "month_start",
+            ),
+            (
+                "metrics/monthly_spending_by_category.parquet",
+                "analytics.fct_monthly_spending_by_category",
+                "month_start, category",
+            ),
+        ]
+        for relative_key, relation, ordering in metric_exports:
+            destination = output_directory / Path(relative_key)
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            row_count = connection.execute(
+                f"select count(*) from {relation}"
+            ).fetchone()[0]
+            connection.execute(
+                f"""
+                copy (
+                    select *
+                    from {relation}
+                    order by {ordering}
+                ) to {sql_string(str(destination))} (
+                    format parquet,
+                    compression zstd,
+                    compression_level 3
+                )
+                """
+            )
+            files.append(
+                file_entry(output_directory, relative_key, row_count)
+            )
 
         source_data_cutoff, source_refresh_time = connection.execute(
             """

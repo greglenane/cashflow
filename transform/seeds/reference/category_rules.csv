@@ -1,0 +1,2 @@
+rule_id,priority,enabled,merchant_pattern,category
+synthetic_market_grocery,100,true,^synthetic market$,Groceries

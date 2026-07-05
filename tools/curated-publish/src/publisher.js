@@ -6,7 +6,7 @@ import path from "node:path";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 
 const ALLOWED_KEY_PATTERN =
-  /^(accounts\/accounts\.parquet|transactions\/year=\d{4}\/transactions\.parquet)$/;
+  /^(accounts\/accounts\.parquet|transactions\/year=\d{4}\/transactions\.parquet|metrics\/monthly_(cashflow|spending_by_category)\.parquet)$/;
 
 async function sha256File(filePath) {
   const hash = createHash("sha256");

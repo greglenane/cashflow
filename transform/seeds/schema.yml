@@ -1,0 +1,22 @@
+version: 2
+
+seeds:
+  - name: category_rules
+    description: Ordered user-maintained merchant regex overrides.
+    columns:
+      - name: rule_id
+        data_tests:
+          - unique
+          - not_null
+      - name: priority
+        data_tests:
+          - not_null
+      - name: enabled
+        data_tests:
+          - not_null
+      - name: merchant_pattern
+        data_tests:
+          - not_null
+      - name: category
+        data_tests:
+          - not_null

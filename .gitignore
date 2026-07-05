@@ -5,6 +5,8 @@ node_modules/
 .venv/
 .local/
 .python-version
+__pycache__/
+*.py[cod]
 *.duckdb
 *.duckdb.wal
 build/
