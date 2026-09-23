@@ -1,8 +1,8 @@
 # Cashflow transformations
 
-This dbt project currently runs only against synthetic Plaid-shaped seeds.
-Nothing in this project reads AWS credentials, Secrets Manager, or the private
-S3 bucket.
+This dbt project defaults to synthetic Plaid-shaped seeds. The explicit `prod`
+target reads private S3 batches using temporary transform-role credentials.
+Neither target reads Secrets Manager.
 
 ## Run locally
 
@@ -69,15 +69,19 @@ transaction rows into issues, logs, documentation, or chat.
 - `int_transfer_matches` pairs equal-and-opposite transactions across different
   accounts using mutual-best matching within three calendar days. Checking
   outflows paired with credit inflows are treated as card payments.
-- `fct_monthly_cashflow` excludes transfers and card payments, nets refunds
-  against spending, and calculates savings rate only when income is nonzero.
+- `fct_transactions` exposes `income_amount`, `spending_amount`,
+  `unmatched_refund_amount`, `reporting_date`, and `reporting_category` so every
+  downstream total can be traced to its contributing transaction rows.
+- `fct_monthly_cashflow` excludes transfers and card payments, nets only matched
+  refunds against spending, and calculates savings rate only when income is nonzero.
 - `fct_monthly_spending_by_category` uses the same canonical transaction model,
   so dashboard totals and category drill-downs reconcile.
 
 ## Comparable periods
 
-- `fct_cashflow_periods` derives the cutoff from the latest imported
-  transaction date.
+- `fct_cashflow_periods` uses the shared `fct_data_status` cutoff. All expected
+  accounts must have a fresh sync with `HISTORICAL_UPDATE_COMPLETE` and pass
+  source-to-canonical reconciliation before comparable periods are emitted.
 - Current MTD, prior-month, and prior-year periods use the same number of
   calendar days, capped at each comparison month's last day.
 - `fct_mtd_comparison` exposes absolute and percentage changes. Percentage
@@ -94,11 +98,86 @@ transaction rows into issues, logs, documentation, or chat.
   comparable expenses exist.
 - Mature cohorts require an absolute amount of at least $250, at least three
   times the category median, and a modified z-score of at least 5.
-- Categories with fewer than five expenses use a conservative $1,000 and
-  three-times-median fallback.
+- Categories with fewer than five expenses use a $1,000 absolute threshold;
+  a single large purchase can be flagged without an established baseline.
 - Every recurring and outlier row includes its baseline and a readable
   detection reason.
 
-The classification rules are intentionally minimal. Transfer pairing,
-user-overridable categorization, and production S3 ingestion belong in later
-models with dedicated tests.
+Amount tolerance and minimum consistency can be configured with
+`recurring_amount_tolerance` (default 0.20) and `recurring_min_consistency`
+(default 0.75). Recurring results are candidates, not confirmed subscriptions.
+
+## Refund treatment
+
+`int_refund_matches` automatically matches only a unique full refund to a unique
+purchase on the same account, with the same merchant (ignoring case and outer
+whitespace), the same absolute amount, and a purchase date within the preceding
+180 days. Configure the window with `refund_match_days`.
+
+A matched refund reduces spending in the original purchase's category and
+period. Posted date, raw amount, original category, and both transaction IDs
+remain available for drill-down. This restates the original period; it is an
+analytical allocation, not a bank balance movement in that period. Fully refunded
+purchases do not contribute to recurring or outlier detection.
+
+Partial, ambiguous, older, and cross-account refunds remain separate as
+`unmatched_refunds`; they do not reduce spending or increase income. Matching is
+a conservative heuristic, not a bank-provided purchase/refund link.
+
+## Account freshness and reconciliation
+
+- `fct_account_status` distinguishes the latest posted transaction from the
+  latest completed sync, including syncs with no transaction changes.
+- Coverage is conservatively estimated through the **previous calendar day in
+  America/New_York** at the time of each completed sync. Plaid does not provide a
+  bank-certified fully posted-through date in these batches; late postings can
+  still restate results. The dashboard must display this limitation.
+- `expected_accounts.csv` requires one WF checking, one WF credit, and one Amex
+  credit account. Missing, extra, incomplete, stale, or future-dated account
+  coverage prevents reporting. Fresh means synced on the reporting date in
+  New York. Production uses the build's date; fixture builds use July 4, 2026.
+- `fct_account_reconciliation` compares posted source counts and signed totals
+  with the canonical facts, after latest-version deduplication and pending
+  exclusion. It also reports uncategorized transactions, unmatched transfers,
+  unmatched refunds, pending records, and duplicate records. Production event
+  replay already collapses duplicate versions before these counts are measured.
+- `fct_data_status` supplies the shared cutoff (the earliest account coverage),
+  newest/oldest account sync times, quality warning counts, currency, and timezone.
+  dbt fails the reporting readiness test on incomplete coverage or reconciliation
+  failure; the curated exporter independently rejects a non-ready status.
+- **Statement/balance reconciliation remains `not_available`.** This validates
+  the pipeline against its imported source, not against bank statements. No
+  opening/closing balances or statement totals are currently supplied.
+
+Canonical transactions and the three quality models have enforced dbt column
+contracts in `models/schema.yml`.
+
+## Validation
+
+From the repository root, using Git Bash:
+
+```bash
+uv run python -m unittest discover -s transform/test_python -v
+uv run python -m unittest discover -s tools/curated-publish/test -p 'test_*.py' -v
+npm --prefix tools/plaid-sync test
+npm --prefix tools/curated-publish test
+cd transform
+uv run dbt --no-partial-parse build --profiles-dir . --target dev
+```
+
+The Python analytics suite executes the actual SQL in an in-memory DuckDB with
+synthetic input. It covers refund ambiguity, partial refunds, cross-period
+allocation, missing/stale/quiet accounts, DST boundaries, short months, leap
+years, zero baselines, lost/changed records, latest pending versions, production
+event replay, recurring cadence/variance, and outlier edge cases.
+
+See [the manually checked fixture period](validation.md). CSV fallback ingestion,
+bank-statement comparison, Evidence pages, and daily reporting/automation remain
+separate project milestones.
+
+For reviewing actual data and business-rule assumptions, use the
+[manual review guide](manual-review.md) and its local HTML report command.
+Card-payment classification explicitly recognizes
+`LOAN_PAYMENTS_CREDIT_CARD_PAYMENT` on both sides of a payment, in addition to
+the transfer-style payment labels. A dedicated regression test checks that none
+of these entries contribute to income, spending, or unmatched refunds.

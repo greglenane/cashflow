@@ -36,10 +36,10 @@ with expected as (
     select
         date '2026-07-01',
         0.00::decimal(18, 2),
-        270.50::decimal(18, 2),
-        -270.50::decimal(18, 2),
+        290.50::decimal(18, 2),
+        -290.50::decimal(18, 2),
         null::decimal(18, 4),
-        5::bigint
+        4::bigint
 ),
 
 actual as (

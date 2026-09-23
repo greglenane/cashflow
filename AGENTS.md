@@ -138,6 +138,24 @@ For current-month comparisons, compare through the latest fully imported transac
 
 Exclude transfers, credit-card payments, reversals, and duplicates from income and spending totals. Refunds should reduce spending in the category and period to which they belong when matching is reliable; otherwise show them separately and document the treatment.
 
+Implemented analytics assumptions:
+
+- Automatically allocate only unambiguous one-to-one full refunds: same account,
+  normalized merchant, absolute amount, and purchase within 180 days. Use the
+  purchase date/category for reporting while preserving posted dates and IDs.
+  Partial and ambiguous refunds remain separate and do not change income or
+  spending. Matched full refunds restate the original purchase period.
+- Infer imported-through coverage as the previous New York calendar day at the
+  latest completed historical sync, including zero-change batches. Use the
+  earliest coverage across the three expected accounts. This is an estimate,
+  not a bank-certified posting watermark; display that limitation.
+- Require fresh, complete coverage for all expected accounts and successful
+  source-to-canonical count/amount reconciliation before reporting/export.
+  Statement reconciliation remains unverified until statement totals or balances
+  are supplied. Unmatched transfers and uncategorized records are visible warnings.
+- With fewer than five expenses in a category, flag purchases of at least $1,000
+  using an absolute threshold; a reliable relative baseline is not required.
+
 ## Detection Rules
 
 ### Recurring purchases

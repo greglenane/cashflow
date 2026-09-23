@@ -8,7 +8,7 @@ with expenses as (
         category,
         -amount as amount_absolute
     from {{ ref('fct_transactions') }}
-    where flow_type = 'expense'
+    where flow_type = 'expense' and matched_refund_id is null
 ),
 
 category_baselines as (
@@ -67,7 +67,6 @@ flagged as (
                 then 'zero_mad_fallback'
             when category_transaction_count < 5
                 and amount_absolute >= 1000
-                and median_multiple >= 3
                 then 'limited_history_threshold'
         end as flag_method
     from scored
@@ -102,7 +101,7 @@ select
             'x the category median'
         )
         when 'limited_history_threshold' then concat(
-            'Limited category history; amount exceeds $1,000 and is ',
+            'Limited category history; amount is at least $1,000 and is ',
             round(median_multiple, 2),
             'x the category median'
         )

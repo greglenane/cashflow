@@ -9,12 +9,19 @@ Publication order:
 2. One masked account metadata file
 3. Shared monthly and matched-period cashflow metric files
 4. Explainable recurring-purchase and outlier files
-5. An immutable run manifest
-6. `curated/manifests/latest.json`
+5. Account freshness, pipeline reconciliation, and shared data-status files
+6. An immutable run manifest
+7. `curated/manifests/latest.json`
 
 All uploads request SSE-S3 (`AES256`). Object keys and the run ID are
 deterministic, so rerunning unchanged data overwrites the same versioned keys.
 The publisher has no delete permission.
+
+The export requires `fct_data_status.ready_for_reporting` and a non-null shared
+cutoff. It takes cutoff/refresh metadata from that model, including zero-change
+syncs, rather than inferring freshness from transaction dates. Transaction files
+include refund links and the canonical reporting date/category and metric
+contributions. Quality files are private just like the transaction files.
 
 Run the complete dbt build first. From the repository root:
 

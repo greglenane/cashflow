@@ -10,7 +10,7 @@ with expenses as (
             order by transaction_date, transaction_id
         ) as previous_transaction_date
     from {{ ref('fct_transactions') }}
-    where flow_type = 'expense'
+    where flow_type = 'expense' and matched_refund_id is null
 ),
 
 merchant_summary as (
@@ -38,7 +38,7 @@ amount_stats as (
                     - merchant_summary.typical_amount
                 )
                 / nullif(merchant_summary.typical_amount, 0)
-                <= 0.20
+                <= {{ var('recurring_amount_tolerance', 0.20) }}
                 as integer
             )
         ) as amount_consistency
@@ -138,8 +138,8 @@ qualified as (
     from candidates
     where occurrence_count >= 3
       and cadence is not null
-      and amount_consistency >= 0.75
-      and interval_consistency >= 0.75
+      and amount_consistency >= {{ var('recurring_min_consistency', 0.75) }}
+      and interval_consistency >= {{ var('recurring_min_consistency', 0.75) }}
 )
 
 select

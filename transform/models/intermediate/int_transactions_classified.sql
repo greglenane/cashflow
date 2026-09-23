@@ -14,7 +14,8 @@ classified as (
         case
             when transactions.category_detailed in (
                 'TRANSFER_IN_CARD_PAYMENT',
-                'TRANSFER_OUT_CARD_PAYMENT'
+                'TRANSFER_OUT_CARD_PAYMENT',
+                'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
             ) then 'card_payment'
             when transactions.category_primary in (
                 'TRANSFER_IN',

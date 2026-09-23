@@ -1,0 +1,4 @@
+institution,account_type,expected_count
+wells-fargo,checking,1
+wells-fargo,credit,1
+amex,credit,1

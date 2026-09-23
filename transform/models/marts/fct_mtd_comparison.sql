@@ -14,6 +14,9 @@ pivoted as (
         max(spending) filter (
             where period_name = 'current_mtd'
         ) as current_spending,
+        max(unmatched_refunds) filter (
+            where period_name = 'current_mtd'
+        ) as current_unmatched_refunds,
         max(net_cashflow) filter (
             where period_name = 'current_mtd'
         ) as current_net_cashflow,

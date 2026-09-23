@@ -15,71 +15,77 @@ const testRoot = path.resolve(
   "../../../.local/test-tmp",
 );
 
-test("uploads verified data before immutable and latest manifests", async () => {
-  await mkdir(testRoot, { recursive: true });
-  const directory = await mkdtemp(path.join(testRoot, "curated-publish-"));
-  const relativeKey = "accounts/accounts.parquet";
-  const filePath = path.join(directory, "accounts", "accounts.parquet");
-  const fileBody = Buffer.from("synthetic-parquet");
-  await mkdir(path.dirname(filePath), { recursive: true });
-  await writeFile(filePath, fileBody);
+for (const relativeKey of [
+  "accounts/accounts.parquet",
+  "quality/account_status.parquet",
+  "quality/account_reconciliation.parquet",
+  "quality/data_status.parquet",
+]) {
+  test(`uploads ${relativeKey} before immutable and latest manifests`, async () => {
+    await mkdir(testRoot, { recursive: true });
+    const directory = await mkdtemp(path.join(testRoot, "curated-publish-"));
+    const filePath = path.join(directory, relativeKey);
+    const fileBody = Buffer.from("synthetic-parquet");
+    await mkdir(path.dirname(filePath), { recursive: true });
+    await writeFile(filePath, fileBody);
 
-  const manifest = {
-    schema_version: 1,
-    run_id: "0123456789abcdef01234567",
-    source_data_cutoff: "2026-07-05",
-    total_transactions: 7,
-    files: [
-      {
-        key: relativeKey,
-        content_type: "application/vnd.apache.parquet",
-        row_count: 3,
-        size_bytes: fileBody.length,
-        sha256: sha256(fileBody),
-      },
-    ],
-  };
-  const manifestPath = path.join(directory, "manifest.json");
-  await writeFile(manifestPath, JSON.stringify(manifest));
+    const manifest = {
+      schema_version: 1,
+      run_id: "0123456789abcdef01234567",
+      source_data_cutoff: "2026-07-05",
+      total_transactions: 7,
+      files: [
+        {
+          key: relativeKey,
+          content_type: "application/vnd.apache.parquet",
+          row_count: 3,
+          size_bytes: fileBody.length,
+          sha256: sha256(fileBody),
+        },
+      ],
+    };
+    const manifestPath = path.join(directory, "manifest.json");
+    await writeFile(manifestPath, JSON.stringify(manifest));
 
-  const requests = [];
-  const client = {
-    send: async (command) => {
-      const input = command.input;
-      let body;
-      if (Buffer.isBuffer(input.Body)) {
-        body = input.Body;
-      } else {
-        const chunks = [];
-        for await (const chunk of input.Body) {
-          chunks.push(chunk);
+    const requests = [];
+    const client = {
+      send: async (command) => {
+        const input = command.input;
+        let body;
+        if (Buffer.isBuffer(input.Body)) {
+          body = input.Body;
+        } else {
+          const chunks = [];
+          for await (const chunk of input.Body) {
+            chunks.push(chunk);
+          }
+          body = Buffer.concat(chunks);
         }
-        body = Buffer.concat(chunks);
-      }
-      requests.push({ ...input, Body: body });
-      return {};
-    },
-  };
+        requests.push({ ...input, Body: body });
+        return {};
+      },
+    };
 
-  const result = await publishRun({ client, manifestPath });
+    const result = await publishRun({ client, manifestPath });
 
-  assert.deepEqual(
-    requests.map((request) => request.Key),
-    [
-      "curated/accounts/accounts.parquet",
-      "curated/manifests/runs/0123456789abcdef01234567.json",
-      "curated/manifests/latest.json",
-    ],
-  );
-  assert.equal(
-    requests.every(
-      (request) => request.ServerSideEncryption === "AES256",
-    ),
-    true,
-  );
-  assert.equal(requests[0].Body.equals(fileBody), true);
-  assert.equal(result.transactions, 7);
-});
+    assert.deepEqual(
+      requests.map((request) => request.Key),
+      [
+        `curated/${relativeKey}`,
+        "curated/manifests/runs/0123456789abcdef01234567.json",
+        "curated/manifests/latest.json",
+      ],
+    );
+    assert.equal(
+      requests.every(
+        (request) => request.ServerSideEncryption === "AES256",
+      ),
+      true,
+    );
+    assert.equal(requests[0].Body.equals(fileBody), true);
+    assert.equal(result.transactions, 7);
+  });
+}
 
 test("rejects manifest paths outside the curated layout", async () => {
   await mkdir(testRoot, { recursive: true });

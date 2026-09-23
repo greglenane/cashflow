@@ -1,6 +1,7 @@
 with cutoff as (
-    select max(transaction_date) as data_cutoff_date
-    from {{ ref('fct_transactions') }}
+    select data_cutoff_date
+    from {{ ref('fct_data_status') }}
+    where ready_for_reporting
 ),
 
 boundaries as (
@@ -69,31 +70,12 @@ period_components as (
         periods.period_end,
         date_diff('day', periods.period_start, periods.period_end) + 1
             as comparable_day_count,
-        coalesce(
-            sum(
-                case
-                    when transactions.flow_type = 'income'
-                        then transactions.amount
-                    else 0
-                end
-            ),
-            0
-        ) as income,
-        coalesce(
-            sum(
-                case
-                    when transactions.flow_type = 'expense'
-                        then -transactions.amount
-                    when transactions.flow_type = 'refund'
-                        then -transactions.amount
-                    else 0
-                end
-            ),
-            0
-        ) as spending
+        coalesce(sum(transactions.income_amount), 0) as income,
+        coalesce(sum(transactions.spending_amount), 0) as spending,
+        coalesce(sum(transactions.unmatched_refund_amount), 0) as unmatched_refunds
     from periods
     left join {{ ref('fct_transactions') }} as transactions
-        on transactions.transaction_date
+        on transactions.reporting_date
             between periods.period_start and periods.period_end
     group by
         periods.period_name,

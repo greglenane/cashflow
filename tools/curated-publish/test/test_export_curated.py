@@ -168,6 +168,29 @@ class ExportCuratedTest(unittest.TestCase):
                 date '2026-01-01' as transaction_date
             """
         )
+        for column, data_type in [
+            ("matched_purchase_id", "varchar"),
+            ("matched_refund_id", "varchar"),
+            ("refund_status", "varchar"),
+            ("reporting_date", "date"),
+            ("reporting_category", "varchar"),
+            ("income_amount", "decimal(18, 2)"),
+            ("spending_amount", "decimal(18, 2)"),
+            ("unmatched_refund_amount", "decimal(18, 2)"),
+        ]:
+            connection.execute(
+                f"alter table analytics.fct_transactions add column {column} {data_type}"
+            )
+        connection.execute("""
+            create table analytics.fct_data_status as
+            select true as ready_for_reporting,
+                date '2026-01-02' as data_cutoff_date,
+                timestamptz '2026-01-03 09:00:00+00' as source_refresh_time
+        """)
+        for table in ("fct_account_status", "fct_account_reconciliation"):
+            connection.execute(
+                f"create table analytics.{table} as select 'acct' as account_id"
+            )
         connection.close()
 
         first = export_curated(database, output)
@@ -175,7 +198,9 @@ class ExportCuratedTest(unittest.TestCase):
 
         self.assertEqual(first["run_id"], second["run_id"])
         self.assertEqual(first["total_transactions"], 2)
-        self.assertEqual(len(first["files"]), 9)
+        self.assertEqual(len(first["files"]), 12)
+        self.assertEqual(first["source_data_cutoff"], "2026-01-02")
+        self.assertTrue(first["source_refresh_time"].startswith("2026-01-03"))
         self.assertTrue(
             (
                 output
@@ -210,6 +235,18 @@ class ExportCuratedTest(unittest.TestCase):
         self.assertTrue(
             (output / "analytics/outlier_purchases.parquet").is_file()
         )
+        self.assertTrue((output / "quality/account_status.parquet").is_file())
+        self.assertTrue((output / "quality/account_reconciliation.parquet").is_file())
+        self.assertTrue((output / "quality/data_status.parquet").is_file())
+
+        # A failed coverage check must preserve the last good local export.
+        manifest_before = (output / "manifest.json").read_bytes()
+        connection = duckdb.connect(str(database))
+        connection.execute("update analytics.fct_data_status set ready_for_reporting = false")
+        connection.close()
+        with self.assertRaisesRegex(ValueError, "complete, reconciled"):
+            export_curated(database, output)
+        self.assertEqual((output / "manifest.json").read_bytes(), manifest_before)
 
 
 if __name__ == "__main__":

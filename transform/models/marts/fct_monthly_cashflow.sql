@@ -1,17 +1,17 @@
 with monthly_components as (
     select
-        cast(date_trunc('month', transaction_date) as date) as month_start,
-        sum(
-            case when flow_type = 'income' then amount else 0 end
-        ) as income,
+        cast(date_trunc('month', reporting_date) as date) as month_start,
+        sum(income_amount) as income,
         sum(
             case when flow_type = 'expense' then -amount else 0 end
         ) as gross_spending,
         sum(
-            case when flow_type = 'refund' then amount else 0 end
+            case when refund_status = 'matched_full' then amount else 0 end
         ) as refunds,
+        sum(unmatched_refund_amount) as unmatched_refunds,
+        sum(spending_amount) as spending,
         count(*) filter (
-            where flow_type in ('income', 'expense', 'refund')
+            where flow_type in ('income', 'expense') or refund_status = 'matched_full'
         ) as included_transaction_count
     from {{ ref('fct_transactions') }}
     group by month_start
@@ -23,8 +23,9 @@ metrics as (
         income,
         gross_spending,
         refunds,
-        gross_spending - refunds as spending,
-        income - (gross_spending - refunds) as net_cashflow,
+        unmatched_refunds,
+        spending,
+        income - spending as net_cashflow,
         included_transaction_count
     from monthly_components
 )

@@ -26,7 +26,15 @@ TRANSACTION_COLUMNS = """
     match_date_distance_days,
     source,
     source_file,
-    imported_at
+    imported_at,
+    matched_purchase_id,
+    matched_refund_id,
+    refund_status,
+    reporting_date,
+    reporting_category,
+    income_amount,
+    spending_amount,
+    unmatched_refund_amount
 """
 
 
@@ -79,10 +87,18 @@ def export_curated(
 ) -> dict[str, object]:
     database_path = database_path.resolve()
     output_directory = output_directory.resolve()
-    reset_output_directory(output_directory)
-
     connection = duckdb.connect(str(database_path), read_only=True)
     try:
+        status = connection.execute(
+            """
+            select ready_for_reporting, data_cutoff_date, source_refresh_time
+            from analytics.fct_data_status
+            """
+        ).fetchall()
+        if len(status) != 1 or status[0][0] is not True or status[0][1] is None:
+            raise ValueError("Curated export requires complete, reconciled account coverage")
+        _, source_data_cutoff, source_refresh_time = status[0]
+        reset_output_directory(output_directory)
         years = [
             row[0]
             for row in connection.execute(
@@ -160,6 +176,21 @@ def export_curated(
 
         metric_exports = [
             (
+                "quality/account_status.parquet",
+                "analytics.fct_account_status",
+                "account_id",
+            ),
+            (
+                "quality/account_reconciliation.parquet",
+                "analytics.fct_account_reconciliation",
+                "account_id",
+            ),
+            (
+                "quality/data_status.parquet",
+                "analytics.fct_data_status",
+                "data_cutoff_date",
+            ),
+            (
                 "metrics/monthly_cashflow.parquet",
                 "analytics.fct_monthly_cashflow",
                 "month_start",
@@ -213,14 +244,6 @@ def export_curated(
                 file_entry(output_directory, relative_key, row_count)
             )
 
-        source_data_cutoff, source_refresh_time = connection.execute(
-            """
-            select
-                max(transaction_date),
-                max(imported_at)
-            from analytics.fct_transactions
-            """
-        ).fetchone()
     finally:
         connection.close()
 

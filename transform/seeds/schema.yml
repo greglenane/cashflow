@@ -1,6 +1,19 @@
 version: 2
 
 seeds:
+  - name: expected_accounts
+    description: Required institution/account-type counts for reporting coverage.
+    data_tests:
+      - unique:
+          arguments:
+            column_name: "institution || '|' || account_type"
+    columns:
+      - name: institution
+        data_tests: [not_null]
+      - name: account_type
+        data_tests: [not_null]
+      - name: expected_count
+        data_tests: [not_null]
   - name: category_rules
     description: Ordered user-maintained merchant regex overrides.
     columns:

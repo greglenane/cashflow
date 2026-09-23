@@ -41,7 +41,7 @@ models:
                 field: account_id
 
   - name: stg_plaid_accounts
-    description: Synthetic Plaid account metadata normalized to non-sensitive internal identifiers.
+    description: Account metadata from synthetic fixtures or private Plaid batches; names are masked.
     columns:
       - name: account_id
         data_tests:
@@ -104,31 +104,93 @@ models:
                 values: [transfer, card_payment]
 
   - name: fct_transactions
+    config:
+      contract:
+        enforced: true
     description: Canonical transaction fact table used by all cashflow metrics.
     columns:
       - name: transaction_id
+        data_type: VARCHAR
         data_tests:
           - unique
           - not_null
       - name: account_id
+        data_type: VARCHAR
         data_tests:
           - not_null
       - name: transaction_date
+        data_type: DATE
         data_tests:
           - not_null
       - name: amount
+        data_type: DECIMAL(18,2)
         data_tests:
           - not_null
       - name: flow_type
+        data_type: VARCHAR
         data_tests:
           - accepted_values:
               arguments:
                 values: [income, expense, transfer, card_payment, refund, excluded]
       - name: source
+        data_type: VARCHAR
         data_tests:
           - accepted_values:
               arguments:
                 values: [plaid]
+      - name: reporting_date
+        data_type: DATE
+        description: Purchase date for reliably matched full refunds; posted date otherwise.
+        data_tests: [not_null]
+      - name: reporting_category
+        data_type: VARCHAR
+        data_tests: [not_null]
+      - name: matched_purchase_id
+        data_type: VARCHAR
+        data_tests: [unique]
+      - name: matched_refund_id
+        data_type: VARCHAR
+        data_tests: [unique]
+      - name: refund_status
+        data_type: VARCHAR
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [not_applicable, matched_full, unmatched]
+      - name: income_amount
+        data_type: DECIMAL(18,2)
+        description: Canonical income contribution; zero for all other flows.
+        data_tests: [not_null]
+      - name: spending_amount
+        data_type: DECIMAL(18,2)
+        description: Expense contribution minus matched full refunds; unmatched refunds contribute zero.
+        data_tests: [not_null]
+      - name: unmatched_refund_amount
+        data_type: DECIMAL(18,2)
+        data_tests: [not_null]
+      - name: account_name
+        data_type: VARCHAR
+      - name: account_type
+        data_type: VARCHAR
+      - name: description_raw
+        data_type: VARCHAR
+      - name: merchant_normalized
+        data_type: VARCHAR
+      - name: category
+        data_type: VARCHAR
+      - name: category_rule_id
+        data_type: VARCHAR
+      - name: transfer_match_id
+        data_type: VARCHAR
+      - name: matched_transaction_id
+        data_type: VARCHAR
+      - name: match_date_distance_days
+        data_type: BIGINT
+      - name: source_file
+        data_type: VARCHAR
+      - name: imported_at
+        data_type: TIMESTAMP WITH TIME ZONE
 
   - name: fct_monthly_cashflow
     description: Monthly income, net spending, cashflow, and savings-rate metrics.
@@ -241,3 +303,132 @@ models:
       - name: detection_reason
         data_tests:
           - not_null
+
+  - name: int_refund_matches
+    description: Unique one-to-one full refund matches on account, merchant, amount, and a configurable 180-day window.
+    columns:
+      - name: refund_transaction_id
+        data_tests: [unique, not_null]
+      - name: purchase_transaction_id
+        data_tests: [unique, not_null]
+
+  - name: stg_plaid_sync_status
+    description: Account coverage from the latest institution batch, including zero-change syncs.
+    columns:
+      - name: account_id
+        data_tests: [unique, not_null]
+      - name: last_synced_at
+        data_tests: [not_null]
+
+  - name: fct_account_status
+    config:
+      contract:
+        enforced: true
+    description: Latest posted activity and completed-sync coverage are intentionally separate. Coverage is the prior New York calendar day, not a bank guarantee of posting completeness.
+    columns:
+      - name: account_id
+        data_type: VARCHAR
+        data_tests: [unique, not_null]
+      - name: freshness_status
+        data_type: VARCHAR
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [ready, missing_sync, incomplete_history, future_sync, stale]
+      - name: account_name
+        data_type: VARCHAR
+      - name: account_type
+        data_type: VARCHAR
+      - name: institution
+        data_type: VARCHAR
+      - name: latest_transaction_date
+        data_type: DATE
+      - name: last_synced_at
+        data_type: TIMESTAMP WITH TIME ZONE
+      - name: update_status
+        data_type: VARCHAR
+      - name: imported_through_date
+        data_type: DATE
+      - name: reporting_as_of_date
+        data_type: DATE
+
+  - name: fct_account_reconciliation
+    config:
+      contract:
+        enforced: true
+    description: Current posted source records reconcile to canonical counts and signed amounts; statement balances are not supplied and remain unverified. Production duplicates are collapsed by event replay before this model.
+    columns:
+      - name: account_id
+        data_type: VARCHAR
+        data_tests: [unique, not_null]
+      - name: pipeline_reconciliation_status
+        data_type: VARCHAR
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [passed]
+      - name: duplicate_record_count
+        data_type: BIGINT
+      - name: pending_count
+        data_type: BIGINT
+      - name: source_posted_count
+        data_type: BIGINT
+      - name: source_posted_amount
+        data_type: DECIMAL(38,2)
+      - name: canonical_count
+        data_type: BIGINT
+      - name: canonical_amount
+        data_type: DECIMAL(38,2)
+      - name: uncategorized_count
+        data_type: BIGINT
+      - name: unmatched_transfer_count
+        data_type: BIGINT
+      - name: unmatched_refund_count
+        data_type: BIGINT
+      - name: count_difference
+        data_type: BIGINT
+      - name: amount_difference
+        data_type: DECIMAL(38,2)
+      - name: statement_reconciliation_status
+        data_type: VARCHAR
+
+  - name: fct_data_status
+    config:
+      contract:
+        enforced: true
+    description: One-row reporting gate requiring expected account coverage, fresh complete syncs, and pipeline reconciliation.
+    columns:
+      - name: data_cutoff_date
+        data_type: DATE
+        data_tests: [not_null, unique]
+      - name: ready_for_reporting
+        data_type: BOOLEAN
+        data_tests: [not_null]
+      - name: account_count
+        data_type: BIGINT
+      - name: ready_account_count
+        data_type: BIGINT
+      - name: earliest_coverage_date
+        data_type: DATE
+      - name: oldest_account_sync_at
+        data_type: TIMESTAMP WITH TIME ZONE
+      - name: source_refresh_time
+        data_type: TIMESTAMP WITH TIME ZONE
+      - name: latest_transaction_date
+        data_type: DATE
+      - name: reconciliation_failures
+        data_type: BIGINT
+      - name: uncategorized_count
+        data_type: HUGEINT
+      - name: unmatched_transfer_count
+        data_type: HUGEINT
+      - name: unmatched_refund_count
+        data_type: HUGEINT
+      - name: account_coverage_complete
+        data_type: BOOLEAN
+      - name: currency
+        data_type: VARCHAR
+      - name: reporting_timezone
+        data_type: VARCHAR

@@ -5,9 +5,8 @@ with periods as (
 
 select *
 from periods
-where comparable_day_count != (
-    select comparable_day_count
-    from periods
-    where period_name = 'current_mtd'
+where comparable_day_count != least(
+    day(data_cutoff_date), day(last_day(period_start))
 )
+   or period_end != period_start + cast(comparable_day_count - 1 as integer)
    or period_end < period_start

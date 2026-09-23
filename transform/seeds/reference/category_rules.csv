@@ -1,2 +1,3 @@
 rule_id,priority,enabled,merchant_pattern,category
+quincy_market_food_drink,10,true,(^|[^a-z0-9])quincy[[:space:]]+market([^a-z0-9]|$),Food & Drink
 synthetic_market_grocery,100,true,^synthetic market$,Groceries
